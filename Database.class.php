@@ -1,8 +1,4 @@
 <?php
-namespace universalEnergy;
-
-use PDO;
-
 class Database {
 
   public  $host;
