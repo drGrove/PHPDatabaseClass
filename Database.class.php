@@ -245,33 +245,42 @@ class Database {
   public  function print2json($array) {
     print(json_encode($array));
   }
+
+  /*
+   * Takes a query statement and a databaseType and returns a statement to insert if no duplicate key (MySQL, MSSQL)
+   * @author Danny Grove <danny@drgrovellc.com> 
+   * @version 1.0
+   * @param $tableStatement, $dbType
+   * @return string
+   */
+  function buildStatement($tableStatement, $dbType) {
+    if (strtoupper($dbType) == "MYSQL") {
+      $newStmt = $tableStatement . " ON DUPLICATE KEY UPDATE"; 
+    } else if (strtoupper($dbType == "MSSQL")) {
+      $newStmt = "IF NOT EXISTS (".$tableStatement['select'].") BEGIN ".$tableStatement['insert']." END ELSE BEGIN ".$tableStatement['update']." END";
+    }
+    return $newStmt;
+  }
+
+  function makeNamedKey($array) {
+    $nameKey = array();
+    foreach($array as $key => $value) {
+      $nameKey[":$key"] = $value;
+    }
+    return $nameKey;
+  }
+
+  function makeSelectors($array) {
+    $selectors = array();
+    foreach($array as $key => $value) {
+      array_push($selectors, $value);
+    }
+    $selectors = implode(',', $selectors);
+    return $selectors;
+  }
 }
 
-function buildStatement($tableStatement, $dbType) {
-  if (strtoupper($dbType) == "MYSQL") {
-    $newStmt = $tableStatement['insert']. " ON DUPLICATE KEY UPDATE"; 
-  } else if (strtoupper($dbType == "MSSQL")) {
-    $newStmt = "IF NOT EXISTS (".$tableStatement['select'].") BEGIN ".$tableStatement['insert']." END ELSE BEGIN ".$tableStatement['update']." END";
-  }
-  return $newStmt;
-}
 
-function makeNamedKey($array) {
-  $nameKey = array();
-  foreach($array as $key => $value) {
-    $nameKey[":$key"] = $value;
-  }
-  return $nameKey;
-}
-
-function makeSelectors($array) {
-  $selectors = array();
-  foreach($array as $key => $value) {
-    array_push($selectors, $value);
-  }
-  $selectors = implode(',', $selectors);
-  return $selectors;
-}
 
 ?>
 
