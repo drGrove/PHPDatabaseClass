@@ -246,5 +246,32 @@ class Database {
     print(json_encode($array));
   }
 }
+
+function buildStatement($tableStatement, $dbType) {
+  if (strtoupper($dbType) == "MYSQL") {
+    $newStmt = $tableStatement['insert']. " ON DUPLICATE KEY UPDATE"; 
+  } else if (strtoupper($dbType == "MSSQL")) {
+    $newStmt = "IF NOT EXISTS (".$tableStatement['select'].") BEGIN ".$tableStatement['insert']." END ELSE BEGIN ".$tableStatement['update']." END";
+  }
+  return $newStmt;
+}
+
+function makeNamedKey($array) {
+  $nameKey = array();
+  foreach($array as $key => $value) {
+    $nameKey[":$key"] = $value;
+  }
+  return $nameKey;
+}
+
+function makeSelectors($array) {
+  $selectors = array();
+  foreach($array as $key => $value) {
+    array_push($selectors, $value);
+  }
+  $selectors = implode(',', $selectors);
+  return $selectors;
+}
+
 ?>
 
