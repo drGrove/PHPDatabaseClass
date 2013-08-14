@@ -102,6 +102,38 @@ class Database {
     return $response;
   }
 
+
+  public function insert($queryString, $data=null) {
+    if($data==null) {
+      // If Data is Null
+      try {
+        $STH = $this->DBH->query($queryString); 
+      } catch (PDOException $e) {
+        echo  $e->getMessage();
+        return false;
+      } catch (Exception $e) {
+        echo $e->getMessage();
+        return false;
+      } 
+
+    } else {
+      // If Data is not Null
+      try {
+        $STH = $this->DBH->prepare($queryString);
+        $STH->execute($data);
+      } catch (PDOException $e) {
+        echo  $e->getMessage();
+        return false;
+      } catch (Exception $e) {
+        echo $e->getMessage();
+        return false;
+      } 
+    }
+
+    return true;
+  }
+
+
   /**
    * Takes in an array and return an imploded string
    * @author Danny Grove
