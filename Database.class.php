@@ -77,10 +77,10 @@ class Database {
       try {
         $STH = $this->DBH->query($queryString); 
       } catch (PDOException $e) {
-        echo  $e->getMessage();
+        return array("sqlError" => 1, "sqlErrorMsg" => $e->getMessage());
       } catch (Exception $e) {
-        echo $e->getMessage();
-      } 
+        return array("exceptionError" => 1, "exceptionErrorMsg" => $e->getMessage());
+      }
 
     } else {
       // If Data is not Null
@@ -88,10 +88,10 @@ class Database {
         $STH = $this->DBH->prepare($queryString);
         $STH->execute($data);
       } catch (PDOException $e) {
-        echo  $e->getMessage();
+        return array("sqlError" => 1, "sqlErrorMsg" => $e->getMessage());
       } catch (Exception $e) {
-        echo $e->getMessage();
-      } 
+        return array("exceptionError" => 1, "exceptionErrorMsg" => $e->getMessage());
+      }
     }
 
     // Fetch All and Return
@@ -102,18 +102,22 @@ class Database {
     return $response;
   }
 
-
-  public function insert($queryString, $data=null) {
+  /**
+   * Take in a query in string format and executes either a prepare or insert method
+   * @author Danny Grove
+   * @version 1.5
+   * @param $queryString, $data
+   * @return $response of statement in a array
+   */
+  public  function insert($queryString, $data=null) {
     if($data==null) {
       // If Data is Null
       try {
         $STH = $this->DBH->query($queryString); 
       } catch (PDOException $e) {
-        echo  $e->getMessage();
-        return false;
+        return array("sqlError" => 1, "sqlErrorMsg" => $e->getMessage());
       } catch (Exception $e) {
-        echo $e->getMessage();
-        return false;
+        return array("exceptionError" => 1, "exceptionErrorMsg" => $e->getMessage());
       } 
 
     } else {
@@ -122,17 +126,14 @@ class Database {
         $STH = $this->DBH->prepare($queryString);
         $STH->execute($data);
       } catch (PDOException $e) {
-        echo  $e->getMessage();
-        return false;
+        return array("sqlError" => 1, "sqlErrorMsg" => $e->getMessage());
       } catch (Exception $e) {
-        echo $e->getMessage();
-        return false;
-      } 
+        return array("exceptionError" => 1, "exceptionErrorMsg" => $e->getMessage());
+      }
     }
 
     return true;
   }
-
 
   /**
    * Takes in an array and return an imploded string
@@ -141,7 +142,7 @@ class Database {
    * @param $fields
    * @return $string of fields for use in a query
    */
-  public  function condenseFields($fields) {
+  public static function condenseFields($fields) {
     $fields = implode(", ", $fields);
     return $fields;
   }
@@ -153,7 +154,7 @@ class Database {
    * @param $fields
    * @return $string of fields for use in query
    */
-  public function condenseKeys($fields) {
+  public static function condenseKeys($fields) {
     $keys = array();
     foreach($fields as $key => $value) {
       array_push($keys, $key);
@@ -169,7 +170,7 @@ class Database {
    * @param $fields
    * @return string of set placeholders for use in query
    */
-  public function condenseKeysWithPlaceholders($fields) {
+  public static function condenseKeysWithPlaceholders($fields) {
     $keysWithPlaceholders = array();
     foreach($fields as $key => $value) {
       array_push($keysWithPlaceholders, "$key=?");
@@ -186,7 +187,7 @@ class Database {
    * @param $fields
    * @return $string of fields with placeholders for a query
    */
-  public  function condenseWithPlaceholders($fields) {
+  public static function condenseWithPlaceholders($fields) {
     foreach($fields as $key => &$value) {
       $value .= "=?";
     }
@@ -202,7 +203,7 @@ class Database {
    * @param $array
    * @return $string of placeholders
    */
-  public  function buildPlaceholders($array) {
+  public static function buildPlaceholders($array) {
     $placeholders = "";
 
     foreach($array as $key => $value) {
@@ -221,7 +222,7 @@ class Database {
    * @param $array
    * @return $string of placeholders
    */
-  public  function buildNamedPlaceholders($array) {
+  public static function buildNamedPlaceholders($array) {
     $placeholders = "";
 
     foreach($array as $key => $value) {
@@ -240,7 +241,7 @@ class Database {
    * @param $fields
    * @return string of set placeholders for use in query
    */
-  public function condenseKeysWithNamedPlaceholders($fields) {
+  public static function condenseKeysWithNamedPlaceholders($fields) {
     $keysWithPlaceholders = array();
     foreach($fields as $key => $value) {
       array_push($keysWithPlaceholders, "$key=:$key");
@@ -257,7 +258,7 @@ class Database {
    * @param $fields
    * @return $string of fields with placeholders for a query
    */
-  public  function condenseWithNamedPlaceholders($fields) {
+  public static function condenseWithNamedPlaceholders($fields) {
     foreach($fields as $key => &$value) {
       $value .= "=:$key";
     }
@@ -274,45 +275,9 @@ class Database {
    * @version 1.0
    * @param $array
    */
-  public  function print2json($array) {
+  public static function print2json($array) {
     print(json_encode($array));
   }
-
-  /*
-   * Takes a query statement and a databaseType and returns a statement to insert if no duplicate key (MySQL, MSSQL)
-   * @author Danny Grove <danny@drgrovellc.com> 
-   * @version 1.0
-   * @param $tableStatement, $dbType
-   * @return string
-   */
-  function buildStatement($tableStatement, $dbType) {
-    if (strtoupper($dbType) == "MYSQL") {
-      $newStmt = $tableStatement . " ON DUPLICATE KEY UPDATE"; 
-    } else if (strtoupper($dbType == "MSSQL")) {
-      $newStmt = "IF NOT EXISTS (".$tableStatement['select'].") BEGIN ".$tableStatement['insert']." END ELSE BEGIN ".$tableStatement['update']." END";
-    }
-    return $newStmt;
-  }
-
-  function makeNamedKey($array) {
-    $nameKey = array();
-    foreach($array as $key => $value) {
-      $nameKey[":$key"] = $value;
-    }
-    return $nameKey;
-  }
-
-  function makeSelectors($array) {
-    $selectors = array();
-    foreach($array as $key => $value) {
-      array_push($selectors, $value);
-    }
-    $selectors = implode(',', $selectors);
-    return $selectors;
-  }
 }
-
-
-
 ?>
 
