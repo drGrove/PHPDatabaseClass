@@ -96,9 +96,11 @@ class Database {
 
     // Fetch All and Return
     $response = $STH->fetchAll(PDO::FETCH_ASSOC);
+    $response['sqlError'] = 0;
+    $response['sqlErrorMsg'] = '';
 
     // Either Gives Rows or True (Successful Query)
-    $response = ($response ? $response : true);
+    //$response = ($response ? $response : true);
     return $response;
   }
 
@@ -131,8 +133,11 @@ class Database {
         return array("exceptionError" => 1, "exceptionErrorMsg" => $e->getMessage());
       }
     }
-
-    return true;
+    
+    return array(
+      "sqlError" => 0,
+      "sqlErrorMsg" => ""
+    );
   }
 
   /**
