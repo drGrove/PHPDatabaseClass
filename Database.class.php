@@ -95,7 +95,7 @@ class Database {
     }
 
     // Fetch All and Return
-    $response = $STH->fetchAll(PDO::FETCH_ASSOC);
+    $response['response'] = $STH->fetchAll(PDO::FETCH_ASSOC);
     $response['sqlError'] = 0;
     $response['sqlErrorMsg'] = '';
 
